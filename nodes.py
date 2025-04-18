@@ -1,6 +1,6 @@
 from faster_live_portrait import FasterLivePortraitPipeline
 from omegaconf import OmegaConf
-from config import LIVE_PORTRAIT_INFER_CFG
+from .config import LIVE_PORTRAIT_INFER_CFG
 
 class FasterLivePortrait:
     @classmethod
@@ -20,7 +20,7 @@ class FasterLivePortrait:
     CATEGORY = "FasterLivePortrait"
 
     def process_image(self, source, target):
-        pipeline = FasterLivePortraitPipeline(cfg=LIVE_PORTRAIT_INFER_CFG, is_animal=False)
+        pipeline = FasterLivePortraitPipeline(cfg=OmegaConf.create(LIVE_PORTRAIT_INFER_CFG), is_animal=False)
         processed_image = pipeline.animate_image(source, target)
         return (processed_image,)
 

@@ -34,12 +34,20 @@ RUN pip3 install --no-cache-dir \
       ${TensorRT_ROOT}/python/tensorrt-10.6.0-cp310-none-linux_x86_64.whl
 
 RUN git clone https://github.com/SeanWangJS/grid-sample3d-trt-plugin.git /grid-sample3d-trt-plugin
-RUN git clone https://github.com/varshith15/FasterLivePortrait.git /FasterLivePortrait
+RUN git clone --branch vbrealtime_upgrade https://github.com/varshith15/FasterLivePortrait.git /FasterLivePortrait
 
 WORKDIR /FasterLivePortrait
+
+# Download JoyVASA models
+RUN git clone https://huggingface.co/jdh-algo/JoyVASA ./checkpoints/
+
+# Download LivePortrait models
 RUN huggingface-cli download KwaiVGI/LivePortrait \
   --local-dir ./checkpoints \
   --exclude "*.git*" "README.md" "docs"
+
+# Download FasterLivePortrait models
+RUN huggingface-cli download warmshao/FasterLivePortrait --local-dir ./checkpoints
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
@@ -62,6 +70,6 @@ COPY scripts/build_fasterliveportrait_trt.sh /build_fasterliveportrait_trt.sh
 RUN chmod +x /build_fasterliveportrait_trt.sh
 RUN chmod +x /build_grid_sample3d_plugin.sh
 
-WORKDIR /workspace
+WORKDIR /FasterLivePortrait
 
 CMD ["/bin/bash"]
