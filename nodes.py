@@ -14,6 +14,22 @@ class FasterLivePortrait:
                 "target": ("IMAGE",),
             },
             "optional": {
+                "flag_normalize_lip": ("BOOLEAN", {"default": False}),
+                "flag_source_video_eye_retargeting": ("BOOLEAN", {"default": False}),
+                "flag_video_editing_head_rotation": ("BOOLEAN", {"default": False}),
+                "flag_eye_retargeting": ("BOOLEAN", {"default": False}),
+                "flag_lip_retargeting": ("BOOLEAN", {"default": False}),
+                "flag_stitching": ("BOOLEAN", {"default": True}),
+                "flag_pasteback": ("BOOLEAN", {"default": True}),
+                "flag_do_crop": ("BOOLEAN", {"default": True}),
+                "flag_do_rot": ("BOOLEAN", {"default": True}),
+                "lip_normalize_threshold": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "driving_multiplier": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
+                "animation_region": (["lip", "full"], {"default": "lip"}), # currently only works for lip
+                "cfg_mode": (["incremental", "reference"], {"default": "incremental"}),
+                "cfg_scale": ("FLOAT", {"default": 1.2, "min": 0.0, "max": 10.0, "step": 0.1}),
+                "source_max_dim": ("INT", {"default": 1280, "min": 64, "step": 8}),
+                "source_division": ("INT", {"default": 2, "min": 1, "max": 8, "step": 1})
             },
         }
 
@@ -24,8 +40,32 @@ class FasterLivePortrait:
     def __init__(self):
         config_dict = get_live_portrait_config()
         self.pipeline = FasterLivePortraitPipeline(cfg=OmegaConf.create(config_dict), is_animal=False)
+        self._last_cfg_inputs = {}
+        self._cfg_keys = [
+            "flag_normalize_lip",
+            "flag_source_video_eye_retargeting",
+            "flag_video_editing_head_rotation",
+            "flag_eye_retargeting",
+            "flag_lip_retargeting",
+            "flag_stitching",
+            "flag_pasteback",
+            "flag_do_crop",
+            "flag_do_rot",
+            "lip_normalize_threshold",
+            "driving_multiplier",
+            "animation_region",
+            "cfg_mode",
+            "cfg_scale",
+            "source_max_dim",
+            "source_division"
+        ]
 
-    def process_image(self, source, target):
+    def process_image(self, source, target, **kwargs):
+        for k in self._cfg_keys:
+            new_val = kwargs[k]
+            if self._last_cfg_inputs.get(k) != new_val:
+                self.pipeline.set_cfg_param(k, new_val)
+                self._last_cfg_inputs[k] = new_val
         source_np = tensor_to_cv2(source)
         target_np = tensor_to_cv2(target)
         processed_image = self.pipeline.animate_image(source_np, target_np)
