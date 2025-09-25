@@ -24,8 +24,10 @@ else
     echo "✅ $PLUGIN_DIR already exists, skipping clone."
 fi
 
+FLP_JUST_CLONED=false
 if [ ! -d "$FLP_DIR/.git" ]; then
     git clone --branch vbrealtime_upgrade https://github.com/varshith15/FasterLivePortrait.git "$FLP_DIR"
+    FLP_JUST_CLONED=true
 else
     echo "✅ $FLP_DIR already exists, skipping clone."
 fi
@@ -40,7 +42,11 @@ ln -sf "$(which python3)" /usr/local/bin/python
 # Prepare FasterLivePortrait repo
 echo "🔵 Preparing FasterLivePortrait..."
 cd "$FLP_DIR"
-git checkout vbrealtime_upgrade
+if [ "$FLP_JUST_CLONED" = true ]; then
+    git checkout vbrealtime_upgrade
+else
+    echo "✅ FasterLivePortrait already exists, skipping git checkout."
+fi
 
 # Patch libgrid_sample_3d_plugin.so path
 sed -i "/if platform.system().lower() == 'linux':/{n;s|.*|        ctypes.CDLL(\"$PLUGIN_DIR/build/libgrid_sample_3d_plugin.so\", mode=ctypes.RTLD_GLOBAL)|}" "$FLP_DIR/scripts/onnx2trt.py"
